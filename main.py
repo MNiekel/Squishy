@@ -4,6 +4,7 @@ import time
 import imagecontroller
 import squishy
 import level
+import box
 
 from pygame.locals import *
 from globals import *
@@ -26,20 +27,25 @@ level.build_level(screen)
 screen.blit(level, [0, 0])
 
 #init squishy
-player = squishy.Squishy(images.get("Lazarus_stand"), screen)
+player = squishy.Squishy(images.get("Lazarus_stand"), screen, level)
 player.set_animations(images.get_animation("Left"), LEFT)
 player.set_animations(images.get_animation("Right"), RIGHT)
 player.set_animations(images.get_animation("Jump_Left"), JUMP_LEFT)
 player.set_animations(images.get_animation("Jump_Right"), JUMP_RIGHT)
+player.set_animations(images.get_animation("Falling"), FALLING)
+
+#get box
+box = box.Box(images.get("CardBox"), screen, CARD)
 
 #init spritelist
 rendering = pygame.sprite.RenderUpdates()
 rendering.add(player)
+rendering.add(box)
 
 pygame.display.flip()
 
 while True:
-    clock.tick(80)
+    clock.tick(100)
 
     for event in pygame.event.get():
         #game.evaluate_event(event)

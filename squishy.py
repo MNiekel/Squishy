@@ -1,29 +1,32 @@
 import pygame
 import mysprite
 import time
+import level
 
 from pygame.locals import *
 from globals import *
 
-STARTPOS = (400, 440)
+STARTPOS = (720, 320)
 MAXLIVES = 3
 STEP = 23
 
 class Squishy(mysprite.MySprite):
-    def __init__(self, image, screen):
+    def __init__(self, image, screen, level):
         mysprite.MySprite.__init__(self, image, screen)
 
         self.rect.bottomleft = STARTPOS
         self.step = STEP
         self.lives = MAXLIVES
         self.direction = LEFT
+        self.level = level
         self.moving = False
-        self.altimage = self.image
+        self.default_img = self.image
         self.frame = 0
         self.delay = 100
         self.current = []
         self.in_animation = False
         self.animations = {}
+        self.falling = False
 
     def set_animations(self, img_list, label):
         self.animations[label] = img_list
@@ -57,7 +60,7 @@ class Squishy(mysprite.MySprite):
             self.rect.bottomleft = bottomleft
 
     def move(self, key, level):
-        if self.in_animation:
+        if self.in_animation or self.falling:
             return
         x = self.rect.left / 40
         y = (level.get_height() - self.rect.bottom) / 40
@@ -75,7 +78,8 @@ class Squishy(mysprite.MySprite):
         self.last_update = pygame.time.get_ticks()
 
     def reset_image(self, dir):
-        self.image = self.altimage
+        self.image = self.default_img
+        self.in_animation = False
         if dir == LEFT:
             bottomleft = self.rect.bottomleft
             self.rect = self.image.get_rect()
@@ -93,8 +97,26 @@ class Squishy(mysprite.MySprite):
             self.rect = self.image.get_rect()
             self.rect.topright = topright
 
+        x = self.rect.left / 40
+        y = (self.level.get_height() - self.rect.bottom) / 40
+        if self.level.check_obstacle(x, y - 1) == 0:
+            self.falling = True
+            self.set_current_animation(FALLING)
+            self.last_update = pygame.time.get_ticks()
+
     def update(self):
         time = pygame.time.get_ticks()
+        if (self.falling and (time - self.last_update > self.delay)):
+            topright = self.rect.topright
+            self.rect = self.image.get_rect()
+            self.rect.topright = topright
+            self.rect.top += 40 / len(self.current)
+            self.frame = (self.frame + 1) % len(self.current)
+            self.image = self.current[self.frame]
+            self.last_update = time
+            if self.frame == 0:
+                self.falling = False
+                self.reset_image(self.direction)
         if (self.in_animation and (time - self.last_update > self.delay)):
             self.frame = (self.frame + 1) % len(self.current)
             self.image = self.current[self.frame]
