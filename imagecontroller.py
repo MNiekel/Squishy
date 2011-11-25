@@ -16,7 +16,6 @@ class ImageController(object):
             img = pygame.image.load(self.path + filename + ".gif").convert()
             img.set_colorkey(TRANSPARENT)
             self.images[filename] = img
-            print "loading " + filename
             return img
 
     def get_bg(self, filename):
@@ -27,7 +26,6 @@ class ImageController(object):
         i = 0
         full = self.path + filename + str(i) + ".png"
         while os.path.exists(full):
-            print i, full
             img = pygame.image.load(full).convert()
             img.set_colorkey(TRANSPARENT)
             img_list.append(img)

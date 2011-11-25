@@ -3,26 +3,40 @@ import sys
 import time
 import imagecontroller
 import squishy
+import level
 
 from pygame.locals import *
 from globals import *
 
 pygame.init()
-pygame.key.set_repeat(1)
+#pygame.key.set_repeat()
 clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode(PANDORA)
 
 images = imagecontroller.ImageController()
 
+#init screen
+screen = pygame.display.set_mode(PANDORA)
 background = images.get_bg("Background")
 screen.blit(background, [0, 0])
-rendering = pygame.sprite.RenderUpdates()
+
+#init level
+level = level.Level(images.get("Wall"), PANDORA)
+level.build_level(screen)
+screen.blit(level, [0, 0])
+
+#init squishy
 player = squishy.Squishy(images.get("Lazarus_stand"), screen)
 player.set_animations(images.get_animation("Left"), LEFT)
+player.set_animations(images.get_animation("Right"), RIGHT)
+player.set_animations(images.get_animation("Jump_Left"), JUMP_LEFT)
+player.set_animations(images.get_animation("Jump_Right"), JUMP_RIGHT)
+
+#init spritelist
+rendering = pygame.sprite.RenderUpdates()
 rendering.add(player)
+
 pygame.display.flip()
-#sys.exit()
 
 while True:
     clock.tick(80)
@@ -36,7 +50,7 @@ while True:
             if event.key == K_ESCAPE:
                 sys.exit()
             if event.key in (K_LEFT, K_RIGHT):
-                player.move(event.key)
+                player.move(event.key, level)
 
     #call sprite updates
     rendering.update()
@@ -44,3 +58,4 @@ while True:
     pygame.display.update()
 
     screen.blit(background, [0, 0])
+    screen.blit(level, [0, 0])

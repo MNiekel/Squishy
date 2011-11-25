@@ -5,7 +5,7 @@ import time
 from pygame.locals import *
 from globals import *
 
-STARTPOS = (380, 400)
+STARTPOS = (400, 440)
 MAXLIVES = 3
 STEP = 23
 
@@ -13,55 +13,92 @@ class Squishy(mysprite.MySprite):
     def __init__(self, image, screen):
         mysprite.MySprite.__init__(self, image, screen)
 
-        self.rect.topleft = STARTPOS
+        self.rect.bottomleft = STARTPOS
         self.step = STEP
         self.lives = MAXLIVES
         self.direction = LEFT
         self.moving = False
-        self.restimage = self.image
+        self.altimage = self.image
         self.frame = 0
         self.delay = 100
         self.current = []
         self.in_animation = False
-        #self.jumping = False
-        #self.falling = False
         self.animations = {}
 
     def set_animations(self, img_list, label):
         self.animations[label] = img_list
 
     def reset(self):
-        self.rect.topleft = STARTPOS
+        self.rect.bottomleft = STARTPOS
         self.lives = MAXLIVES
 
-    def move(self, key):
-        #check place next to you, if empty -> move, check if jumping possible
-        print "moving"
-        if key == K_LEFT:
-            self.direction = LEFT
-            self.current = self.animations[LEFT]
-            self.in_animation = True
-            self.frame = 0
-            right = self.rect.right
-            bottom = self.rect.bottom
-            self.image = self.current[self.frame]
+    def set_current_animation(self, dir):
+        self.direction = dir
+        self.in_animation = True
+        self.frame = 0
+        self.current = self.animations[dir]
+        self.image = self.current[self.frame]
+        if dir == LEFT:
+            bottomright = self.rect.bottomright
             self.rect = self.image.get_rect()
-            self.rect.right = right
-            self.rect.bottom = bottom
-            self.start = pygame.time.get_ticks()
+            self.rect.bottomright = bottomright
+        elif dir == RIGHT:
+            bottomleft = self.rect.bottomleft
+            self.rect = self.image.get_rect()
+            self.rect.bottomleft = bottomleft
+        if dir == JUMP_LEFT:
+            bottomright = self.rect.bottomright
+            print bottomright
+            self.rect = self.image.get_rect()
+            self.rect.bottomright = bottomright
+        elif dir == JUMP_RIGHT:
+            bottomleft = self.rect.bottomleft
+            self.rect = self.image.get_rect()
+            self.rect.bottomleft = bottomleft
+
+    def move(self, key, level):
+        if self.in_animation:
+            return
+        x = self.rect.left / 40
+        y = (level.get_height() - self.rect.bottom) / 40
+        if key == K_LEFT:
+            if level.check_obstacle(x - 1, y) == 0:
+                self.set_current_animation(LEFT)
+            elif level.check_obstacle(x - 1, y + 1) == 0:
+                self.set_current_animation(JUMP_LEFT)
         if key == K_RIGHT:
-            self.direction = RIGHT
+            if level.check_obstacle(x + 1, y) == 0:
+                self.set_current_animation(RIGHT)
+            elif level.check_obstacle(x + 1, y + 1) == 0:
+                self.set_current_animation(JUMP_RIGHT)
+
+        self.last_update = pygame.time.get_ticks()
+
+    def reset_image(self, dir):
+        self.image = self.altimage
+        if dir == LEFT:
+            bottomleft = self.rect.bottomleft
+            self.rect = self.image.get_rect()
+            self.rect.bottomleft = bottomleft
+        elif dir == RIGHT:
+            bottomright = self.rect.bottomright
+            self.rect = self.image.get_rect()
+            self.rect.bottomright = bottomright
+        if dir == JUMP_LEFT:
+            topleft = self.rect.topleft
+            self.rect = self.image.get_rect()
+            self.rect.topleft = topleft
+        elif dir == JUMP_RIGHT:
+            topright = self.rect.topright
+            self.rect = self.image.get_rect()
+            self.rect.topright = topright
 
     def update(self):
         time = pygame.time.get_ticks()
-        if (self.in_animation and (time - self.start > self.delay)):
+        if (self.in_animation and (time - self.last_update > self.delay)):
             self.frame = (self.frame + 1) % len(self.current)
             self.image = self.current[self.frame]
-            self.start = time
+            self.last_update = time
             if self.frame == 0:
-                print self.frame
                 self.in_animation = False
-                self.image = self.restimage
-                bottomleft = self.rect.bottomleft
-                self.rect = self.image.get_rect()
-                self.rect.bottomleft = bottomleft
+                self.reset_image(self.direction)
