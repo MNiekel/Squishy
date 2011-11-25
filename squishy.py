@@ -35,6 +35,9 @@ class Squishy(mysprite.MySprite):
         self.rect.bottomleft = STARTPOS
         self.lives = MAXLIVES
 
+    def get_x(self):
+        return self.rect.left
+
     def set_current_animation(self, dir):
         self.direction = dir
         self.in_animation = True

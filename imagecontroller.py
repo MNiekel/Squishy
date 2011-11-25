@@ -8,15 +8,29 @@ class ImageController(object):
     def __init__(self):
         self.path = "resources/"
         self.images = {}
+        self.animations = {}
 
     def get(self, filename):
         if self.images.has_key(filename):
             return self.images[filename]
         else:
+            print "loading image " + filename
             img = pygame.image.load(self.path + filename + ".gif").convert()
             img.set_colorkey(TRANSPARENT)
             self.images[filename] = img
             return img
+
+    def get_box(self, type):
+        if type == CARD:
+            return self.get("CardBox")
+        if type == WOOD:
+            return self.get("WoodBox")
+        if type == METAL:
+            return self.get("MetalBox")
+        if type == STONE:
+            return self.get("StoneBox")
+        if type == WALL:
+            return self.get("Wall")
 
     def get_bg(self, filename):
         return pygame.image.load(self.path + filename + ".bmp").convert()

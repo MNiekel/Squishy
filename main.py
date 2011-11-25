@@ -5,6 +5,7 @@ import imagecontroller
 import squishy
 import level
 import box
+import random
 
 from pygame.locals import *
 from globals import *
@@ -22,7 +23,7 @@ background = images.get_bg("Background")
 screen.blit(background, [0, 0])
 
 #init level
-level = level.Level(images.get("Wall"), PANDORA)
+level = level.Level(images, screen, background)
 level.build_level(screen)
 screen.blit(level, [0, 0])
 
@@ -34,13 +35,10 @@ player.set_animations(images.get_animation("Jump_Left"), JUMP_LEFT)
 player.set_animations(images.get_animation("Jump_Right"), JUMP_RIGHT)
 player.set_animations(images.get_animation("Falling"), FALLING)
 
-#get box
-box = box.Box(images.get("CardBox"), screen, CARD)
-
 #init spritelist
 rendering = pygame.sprite.RenderUpdates()
 rendering.add(player)
-rendering.add(box)
+rendering.add(box.Box(images.get_box(CARD), level, CARD))
 
 pygame.display.flip()
 
@@ -51,6 +49,12 @@ while True:
         #game.evaluate_event(event)
         if event.type == pygame.QUIT:
             sys.exit()
+
+        elif event.type == NEW_BOX:
+            type = random.choice([CARD, WOOD, METAL, STONE])
+            xpos = player.get_x()
+            rendering.add(box.Box(images.get_box(type), level, type, xpos))
+            print type
 
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:

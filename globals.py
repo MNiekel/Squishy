@@ -1,6 +1,8 @@
 import pygame
 from pygame.locals import *
 
+NEW_BOX = USEREVENT + 1
+
 PANDORA = 800, 480
 
 BLACK = 0, 0, 0
@@ -12,8 +14,8 @@ JUMP_LEFT = 2
 JUMP_RIGHT = 3
 FALLING = 4
 
-#types of boxes
-WALL = 0
+#types of blocks
+WALL = -1
 CARD = 1
 WOOD = 2
 METAL = 3
