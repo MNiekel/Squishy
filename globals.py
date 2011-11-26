@@ -17,6 +17,7 @@ FALLING = 4
 SQUISHED = 5
 
 #types of blocks
+BUTTON = -2
 WALL = -1
 CARD = 1
 WOOD = 2

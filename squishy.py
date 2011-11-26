@@ -2,11 +2,12 @@ import pygame
 import mysprite
 import time
 import level
+import sys
 
 from pygame.locals import *
 from globals import *
 
-STARTPOS = (720, 320)
+STARTPOS = (400, 320)
 MAXLIVES = 3
 STEP = 23
 
@@ -36,20 +37,23 @@ class Squishy(mysprite.MySprite):
         self.rect.bottomleft = STARTPOS
         self.lives = MAXLIVES
 
+    def set_level(self, level):
+        self.level = level
+
     def get_x(self):
         if self.in_animation and not self.falling:
             rect = self.image.get_bounding_rect()
             return self.rect.left + (rect.centerx / 40) * 40
         return self.rect.left
 
-    def check_killed(self):
-        if self.in_animation:
+    def check_killed(self, rect):
+        if self.dead:
             return
-            rect = self.image.get_bounding_rect()
-            x = self.rect.left + (rect.centerx / 40) * 40
-            y = self.rect.bottom + (rect.centery / 40) * 40
-        self.dead = True
         self.set_current_animation(SQUISHED)
+        if self.in_animation:
+            self.rect.left = rect.left
+            self.rect.top = (rect.bottom / 40) * 40
+        self.dead = True
         self.last_update = pygame.time.get_ticks()
 
     def set_current_animation(self, dir):
@@ -76,20 +80,24 @@ class Squishy(mysprite.MySprite):
             self.rect = self.image.get_rect()
             self.rect.bottomleft = bottomleft
 
-    def move(self, key, level):
+    def move(self, key, lvl):
         if self.in_animation or self.falling or self.dead:
             return
         x = self.rect.left / 40
-        y = (level.get_height() - self.rect.bottom) / 40
+        y = (self.level.get_height() - self.rect.bottom) / 40
         if key == K_LEFT:
-            if level.check_obstacle(x - 1, y) == 0:
+            if (self.level.check_obstacle(x - 1, y) == 0) or \
+                (self.level.check_obstacle(x - 1, y) == -2):
                 self.set_current_animation(LEFT)
-            elif level.check_obstacle(x - 1, y + 1) == 0:
+            elif (self.level.check_obstacle(x - 1, y + 1) == 0) or \
+                (self.level.check_obstacle(x - 1, y + 1) == -2):
                 self.set_current_animation(JUMP_LEFT)
         if key == K_RIGHT:
-            if level.check_obstacle(x + 1, y) == 0:
+            if (self.level.check_obstacle(x + 1, y) == 0) or \
+                (self.level.check_obstacle(x + 1, y) == -2):
                 self.set_current_animation(RIGHT)
-            elif level.check_obstacle(x + 1, y + 1) == 0:
+            elif (self.level.check_obstacle(x + 1, y + 1) == 0) or \
+                (self.level.check_obstacle(x + 1, y + 1) == -2):
                 self.set_current_animation(JUMP_RIGHT)
 
         self.last_update = pygame.time.get_ticks()
@@ -121,6 +129,10 @@ class Squishy(mysprite.MySprite):
             self.falling = True
             self.set_current_animation(FALLING)
             self.last_update = pygame.time.get_ticks()
+        elif self.level.check_obstacle(x, y) == -2:
+            print "GEWONNEN!!!"
+            pygame.time.wait(2000)
+            sys.exit()
 
     def update(self):
         time = pygame.time.get_ticks()

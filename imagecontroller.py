@@ -31,6 +31,8 @@ class ImageController(object):
             return self.get("StoneBox")
         if type == WALL:
             return self.get("Wall")
+        if type == BUTTON:
+            return self.get("Button")
 
     def get_bg(self, filename):
         return pygame.image.load(self.path + filename + ".bmp").convert()

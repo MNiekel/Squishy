@@ -80,4 +80,4 @@ while True:
     #check collision
     check = pygame.sprite.spritecollide(player, falling_box, False, pygame.sprite.collide_mask)
     if check:
-        player.check_killed()
+        player.check_killed(check[0].rect)
