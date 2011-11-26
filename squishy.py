@@ -7,53 +7,60 @@ import sys
 from pygame.locals import *
 from globals import *
 
-STARTPOS = (400, 320)
-MAXLIVES = 3
-STEP = 23
+STARTPOS = (400, 440)
+ANIMATION_DELAY = 50
 
 class Squishy(mysprite.MySprite):
     def __init__(self, image, screen, level):
         mysprite.MySprite.__init__(self, image, screen)
 
         self.rect.bottomleft = STARTPOS
-        self.step = STEP
-        self.lives = MAXLIVES
         self.direction = LEFT
         self.level = level
-        self.moving = False
-        self.default_img = self.image
+        self.default = self.image #image of Squishy when he is standing still
         self.frame = 0
-        self.delay = 40
-        self.current = []
-        self.in_animation = False
+        self.delay = ANIMATION_DELAY
+        self.current = [] #current animation
         self.animations = {}
+        self.sounds = {}
+        self.moving = False
         self.falling = False
         self.dead = False
+        self.in_animation = False
 
     def set_animations(self, img_list, label):
         self.animations[label] = img_list
 
-    def reset(self):
-        self.rect.bottomleft = STARTPOS
-        self.lives = MAXLIVES
+    def set_sounds(self, sound, label):
+        self.sounds[label] = sound
 
-    def set_level(self, level):
-        self.level = level
+    def reset(self):
+        self.image = self.default
+        self.rect = self.image.get_rect()
+        self.rect.bottomleft = STARTPOS
+        self.frame = 0
+        self.moving = False
+        self.falling = False
+        self.dead = False
+        self.in_animation = False
 
     def get_x(self):
         if self.in_animation and not self.falling:
             rect = self.image.get_bounding_rect()
-            return self.rect.left + (rect.centerx / 40) * 40
+            return self.rect.left + (rect.centerx / SIZE) * SIZE
         return self.rect.left
 
     def check_killed(self, rect):
         if self.dead:
             return
-        self.set_current_animation(SQUISHED)
         if self.in_animation:
+            self.set_current_animation(SQUISHED)
             self.rect.left = rect.left
-            self.rect.top = (rect.bottom / 40) * 40
+            self.rect.top = (rect.bottom / SIZE) * SIZE
+        else:
+            self.set_current_animation(SQUISHED)
         self.dead = True
+        self.sounds[SQUISHED_SND].play()
         self.last_update = pygame.time.get_ticks()
 
     def set_current_animation(self, dir):
@@ -72,7 +79,6 @@ class Squishy(mysprite.MySprite):
             self.rect.bottomleft = bottomleft
         elif dir == JUMP_LEFT:
             bottomright = self.rect.bottomright
-            print bottomright
             self.rect = self.image.get_rect()
             self.rect.bottomright = bottomright
         elif dir == JUMP_RIGHT:
@@ -83,27 +89,29 @@ class Squishy(mysprite.MySprite):
     def move(self, key, lvl):
         if self.in_animation or self.falling or self.dead:
             return
-        x = self.rect.left / 40
-        y = (self.level.get_height() - self.rect.bottom) / 40
+        x = self.rect.left / SIZE
+        y = (self.level.get_height() - self.rect.bottom) / SIZE
         if key == K_LEFT:
             if (self.level.check_obstacle(x - 1, y) == 0) or \
-                (self.level.check_obstacle(x - 1, y) == -2):
+                (self.level.check_obstacle(x - 1, y) == BUTTON):
                 self.set_current_animation(LEFT)
             elif (self.level.check_obstacle(x - 1, y + 1) == 0) or \
-                (self.level.check_obstacle(x - 1, y + 1) == -2):
+                (self.level.check_obstacle(x - 1, y + 1) == BUTTON):
                 self.set_current_animation(JUMP_LEFT)
         if key == K_RIGHT:
             if (self.level.check_obstacle(x + 1, y) == 0) or \
-                (self.level.check_obstacle(x + 1, y) == -2):
+                (self.level.check_obstacle(x + 1, y) == BUTTON):
                 self.set_current_animation(RIGHT)
             elif (self.level.check_obstacle(x + 1, y + 1) == 0) or \
-                (self.level.check_obstacle(x + 1, y + 1) == -2):
+                (self.level.check_obstacle(x + 1, y + 1) == BUTTON):
                 self.set_current_animation(JUMP_RIGHT)
 
+        if self.in_animation:
+            self.sounds[MOVE_SND].play()
         self.last_update = pygame.time.get_ticks()
 
     def reset_image(self, dir):
-        self.image = self.default_img
+        self.image = self.default
         self.mask = pygame.mask.from_surface(self.image)
         self.in_animation = False
         if dir == LEFT:
@@ -123,16 +131,17 @@ class Squishy(mysprite.MySprite):
             self.rect = self.image.get_rect()
             self.rect.topright = topright
 
-        x = self.rect.left / 40
-        y = (self.level.get_height() - self.rect.bottom) / 40
+        x = self.rect.left / SIZE
+        y = (self.level.get_height() - self.rect.bottom) / SIZE
         if self.level.check_obstacle(x, y - 1) == 0:
             self.falling = True
             self.set_current_animation(FALLING)
             self.last_update = pygame.time.get_ticks()
-        elif self.level.check_obstacle(x, y) == -2:
+        elif self.level.check_obstacle(x, y) == BUTTON:
             print "GEWONNEN!!!"
-            pygame.time.wait(2000)
-            sys.exit()
+            self.sounds[BUTTON_SND].play()
+            event = pygame.event.Event(RESTART)
+            pygame.event.post(event)
 
     def update(self):
         time = pygame.time.get_ticks()
@@ -140,7 +149,6 @@ class Squishy(mysprite.MySprite):
             self.frame = (self.frame + 1) % len(self.current)
             self.image = self.current[self.frame]
             self.mask = pygame.mask.from_surface(self.image)
-            print self.frame
             self.last_update = time
             if self.frame == 0:
                 self.kill()
@@ -150,7 +158,7 @@ class Squishy(mysprite.MySprite):
             topright = self.rect.topright
             self.rect = self.image.get_rect()
             self.rect.topright = topright
-            self.rect.top += 40 / len(self.current)
+            self.rect.top += SIZE / len(self.current)
             self.frame = (self.frame + 1) % len(self.current)
             self.image = self.current[self.frame]
             self.mask = pygame.mask.from_surface(self.image)

@@ -37,6 +37,11 @@ class ImageController(object):
     def get_bg(self, filename):
         return pygame.image.load(self.path + filename + ".bmp").convert()
 
+    def get_title(self, filename):
+        img = pygame.image.load(self.path + filename + ".bmp").convert()
+        img.set_colorkey(TRANSPARENT)
+        return img
+
     def get_animation(self, filename):
         img_list = []
         i = 0

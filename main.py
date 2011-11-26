@@ -2,6 +2,7 @@ import pygame
 import sys
 import time
 import imagecontroller
+import soundcontroller
 import squishy
 import level
 import box
@@ -9,22 +10,27 @@ import random
 
 from pygame.locals import *
 from globals import *
+from levels import *
 
+pygame.mixer.pre_init(44100, -16, 2, 2048)
 pygame.init()
-#pygame.key.set_repeat()
+pygame.mixer.init()
 clock = pygame.time.Clock()
 
-
 images = imagecontroller.ImageController()
+sounds = soundcontroller.SoundController()
+box_hit_bottom_snd = sounds.load_sound("Wall")
 
 #init screen
 screen = pygame.display.set_mode(PANDORA)
 background = images.get_bg("Background")
+title = images.get_title("Title")
 screen.blit(background, [0, 0])
 
 #init level
-level = level.Level(images, screen, background)
-level.build_level(screen)
+level_num = 0
+level = level.Level(images, screen, background, lvls[level_num])
+level.build_level()
 screen.blit(level, [0, 0])
 
 #init squishy
@@ -36,13 +42,34 @@ player.set_animations(images.get_animation("Jump_Right"), JUMP_RIGHT)
 player.set_animations(images.get_animation("Falling"), FALLING)
 player.set_animations(images.get_animation("Squished"), SQUISHED)
 
+player.set_sounds(sounds.load_sound("Button"), BUTTON_SND)
+player.set_sounds(sounds.load_sound("Crush"), CRUSH_SND)
+player.set_sounds(sounds.load_sound("Move"), MOVE_SND)
+player.set_sounds(sounds.load_sound("Squished"), SQUISHED_SND)
+
 #init spritelist
 rendering = pygame.sprite.RenderUpdates()
 falling_box = pygame.sprite.RenderUpdates()
 rendering.add(player)
-falling_box.add(box.Box(images.get_box(CARD), level, CARD, player.get_x()))
+next = random.choice([CARD, WOOD, METAL, STONE])
+falling_box.add(box.Box(images.get_box(next), level, next, player.get_x()))
+next = random.choice([CARD, WOOD, METAL, STONE])
+level.show_next_box(next)
 
+screen.blit(title, [0, 0])
 pygame.display.flip()
+sounds.play_music()
+
+press_space = False
+while not press_space:
+    event = pygame.event.poll()
+    if (event.type == KEYUP and event.key == K_SPACE):
+        press_space = True
+        pygame.event.clear()
+    if (event.type == KEYDOWN and event.key == K_ESCAPE):
+        sys.exit()
+    if (event.type == pygame.QUIT):
+        sys.exit()
 
 while True:
     clock.tick(100)
@@ -53,13 +80,24 @@ while True:
             sys.exit()
 
         elif event.type == NEW_BOX:
-            type = random.choice([CARD, WOOD, METAL, STONE])
+            box_hit_bottom_snd.play()
             xpos = player.get_x()
-            falling_box.add(box.Box(images.get_box(type), level, type, xpos))
+            falling_box.add(box.Box(images.get_box(next), level, next, xpos))
+            next = random.choice([CARD, WOOD, METAL, STONE])
+            level.show_next_box(next)
 
         elif event.type == RESTART:
+            player.reset()
+            falling_box.empty()
+            level_num += 1
+            level.set_level(lvls[level_num])
+            level.build_level()
+            next = random.choice([CARD, WOOD, METAL, STONE])
+            xpos = player.get_x()
+            falling_box.add(box.Box(images.get_box(next), level, next, xpos))
+            next = random.choice([CARD, WOOD, METAL, STONE])
+            level.show_next_box(next)
             pygame.time.wait(2000)
-            sys.exit()
 
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:

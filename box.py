@@ -14,8 +14,8 @@ class Box(mysprite.MySprite):
 
     def update(self):
         self.rect.bottom += 2
-        x = self.rect.left / 40
-        y = (self.screen.get_height() - self.rect.bottom) / 40
+        x = self.rect.left / SIZE
+        y = (self.screen.get_height() - self.rect.bottom) / SIZE
         if not (self.screen.check_obstacle(x, y) == 0):
             type = self.screen.get_type(x, y)
             if (type >= self.type or type < 0):
