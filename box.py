@@ -13,7 +13,7 @@ class Box(mysprite.MySprite):
         self.rect.bottomleft = (xpos, 0)
 
     def update(self):
-        self.rect.bottom += 1
+        self.rect.bottom += 2
         x = self.rect.left / 40
         y = (self.screen.get_height() - self.rect.bottom) / 40
         if not (self.screen.check_obstacle(x, y) == 0):

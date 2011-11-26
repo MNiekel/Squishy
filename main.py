@@ -34,11 +34,13 @@ player.set_animations(images.get_animation("Right"), RIGHT)
 player.set_animations(images.get_animation("Jump_Left"), JUMP_LEFT)
 player.set_animations(images.get_animation("Jump_Right"), JUMP_RIGHT)
 player.set_animations(images.get_animation("Falling"), FALLING)
+player.set_animations(images.get_animation("Squished"), SQUISHED)
 
 #init spritelist
 rendering = pygame.sprite.RenderUpdates()
+falling_box = pygame.sprite.RenderUpdates()
 rendering.add(player)
-rendering.add(box.Box(images.get_box(CARD), level, CARD))
+falling_box.add(box.Box(images.get_box(CARD), level, CARD, player.get_x()))
 
 pygame.display.flip()
 
@@ -53,8 +55,11 @@ while True:
         elif event.type == NEW_BOX:
             type = random.choice([CARD, WOOD, METAL, STONE])
             xpos = player.get_x()
-            rendering.add(box.Box(images.get_box(type), level, type, xpos))
-            print type
+            falling_box.add(box.Box(images.get_box(type), level, type, xpos))
+
+        elif event.type == RESTART:
+            pygame.time.wait(2000)
+            sys.exit()
 
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
@@ -64,8 +69,15 @@ while True:
 
     #call sprite updates
     rendering.update()
+    falling_box.update()
     pygame.display.update(rendering.draw(screen))
+    pygame.display.update(falling_box.draw(screen))
     pygame.display.update()
 
     screen.blit(background, [0, 0])
     screen.blit(level, [0, 0])
+
+    #check collision
+    check = pygame.sprite.spritecollide(player, falling_box, False, pygame.sprite.collide_mask)
+    if check:
+        player.check_killed()

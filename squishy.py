@@ -22,11 +22,12 @@ class Squishy(mysprite.MySprite):
         self.moving = False
         self.default_img = self.image
         self.frame = 0
-        self.delay = 100
+        self.delay = 40
         self.current = []
         self.in_animation = False
         self.animations = {}
         self.falling = False
+        self.dead = False
 
     def set_animations(self, img_list, label):
         self.animations[label] = img_list
@@ -36,7 +37,20 @@ class Squishy(mysprite.MySprite):
         self.lives = MAXLIVES
 
     def get_x(self):
+        if self.in_animation and not self.falling:
+            rect = self.image.get_bounding_rect()
+            return self.rect.left + (rect.centerx / 40) * 40
         return self.rect.left
+
+    def check_killed(self):
+        if self.in_animation:
+            return
+            rect = self.image.get_bounding_rect()
+            x = self.rect.left + (rect.centerx / 40) * 40
+            y = self.rect.bottom + (rect.centery / 40) * 40
+        self.dead = True
+        self.set_current_animation(SQUISHED)
+        self.last_update = pygame.time.get_ticks()
 
     def set_current_animation(self, dir):
         self.direction = dir
@@ -52,7 +66,7 @@ class Squishy(mysprite.MySprite):
             bottomleft = self.rect.bottomleft
             self.rect = self.image.get_rect()
             self.rect.bottomleft = bottomleft
-        if dir == JUMP_LEFT:
+        elif dir == JUMP_LEFT:
             bottomright = self.rect.bottomright
             print bottomright
             self.rect = self.image.get_rect()
@@ -63,7 +77,7 @@ class Squishy(mysprite.MySprite):
             self.rect.bottomleft = bottomleft
 
     def move(self, key, level):
-        if self.in_animation or self.falling:
+        if self.in_animation or self.falling or self.dead:
             return
         x = self.rect.left / 40
         y = (level.get_height() - self.rect.bottom) / 40
@@ -82,6 +96,7 @@ class Squishy(mysprite.MySprite):
 
     def reset_image(self, dir):
         self.image = self.default_img
+        self.mask = pygame.mask.from_surface(self.image)
         self.in_animation = False
         if dir == LEFT:
             bottomleft = self.rect.bottomleft
@@ -109,6 +124,16 @@ class Squishy(mysprite.MySprite):
 
     def update(self):
         time = pygame.time.get_ticks()
+        if (self.dead and (time - self.last_update > self.delay)):
+            self.frame = (self.frame + 1) % len(self.current)
+            self.image = self.current[self.frame]
+            self.mask = pygame.mask.from_surface(self.image)
+            print self.frame
+            self.last_update = time
+            if self.frame == 0:
+                self.kill()
+                event = pygame.event.Event(RESTART)
+                pygame.event.post(event)
         if (self.falling and (time - self.last_update > self.delay)):
             topright = self.rect.topright
             self.rect = self.image.get_rect()
@@ -116,6 +141,7 @@ class Squishy(mysprite.MySprite):
             self.rect.top += 40 / len(self.current)
             self.frame = (self.frame + 1) % len(self.current)
             self.image = self.current[self.frame]
+            self.mask = pygame.mask.from_surface(self.image)
             self.last_update = time
             if self.frame == 0:
                 self.falling = False
@@ -123,6 +149,7 @@ class Squishy(mysprite.MySprite):
         if (self.in_animation and (time - self.last_update > self.delay)):
             self.frame = (self.frame + 1) % len(self.current)
             self.image = self.current[self.frame]
+            self.mask = pygame.mask.from_surface(self.image)
             self.last_update = time
             if self.frame == 0:
                 self.in_animation = False

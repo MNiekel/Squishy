@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 
 NEW_BOX = USEREVENT + 1
+RESTART = USEREVENT + 2
 
 PANDORA = 800, 480
 
@@ -13,6 +14,7 @@ RIGHT = 1
 JUMP_LEFT = 2
 JUMP_RIGHT = 3
 FALLING = 4
+SQUISHED = 5
 
 #types of blocks
 WALL = -1
