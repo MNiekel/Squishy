@@ -1,6 +1,6 @@
 import pygame
 import mysprite
-import level
+import levelsurface
 
 from globals import *
 from pygame.locals import *

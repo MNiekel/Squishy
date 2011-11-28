@@ -31,7 +31,7 @@ screen.blit(background, [0, 0])
 level_num = 0
 old_level = lvls[level_num]
 level = levelsurface.LevelSurface(images, screen, background, lvls[level_num])
-level.build_level()
+level.build_level("level00")
 screen.blit(level, [0, 0])
 
 #init squishy
