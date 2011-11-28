@@ -1,7 +1,7 @@
 import pygame
 import mysprite
 import time
-import level
+import levelsurface
 import sys
 
 from pygame.locals import *
@@ -28,6 +28,10 @@ class Squishy(mysprite.MySprite):
         self.dead = False
         self.in_animation = False
 
+    def printme(self):
+        print self.image
+        print self.rect
+
     def set_animations(self, img_list, label):
         self.animations[label] = img_list
 
@@ -52,7 +56,7 @@ class Squishy(mysprite.MySprite):
 
     def check_killed(self, rect):
         if self.dead:
-            return
+            return True
         if self.in_animation:
             self.set_current_animation(SQUISHED)
             self.rect.left = rect.left
@@ -62,6 +66,8 @@ class Squishy(mysprite.MySprite):
         self.dead = True
         self.sounds[SQUISHED_SND].play()
         self.last_update = pygame.time.get_ticks()
+
+        return True
 
     def set_current_animation(self, dir):
         self.direction = dir

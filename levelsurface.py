@@ -3,7 +3,7 @@ import pygame
 from pygame.locals import *
 from globals import *
 
-class Level(pygame.Surface):
+class LevelSurface(pygame.Surface):
     def __init__(self, img_control, screen, background, level):
         pygame.Surface.__init__(self, screen.get_size())
         self.convert()
@@ -30,7 +30,6 @@ class Level(pygame.Surface):
         self.level = level
 
     def build_level(self):
-        self.clear_all_obstacles()
         lev = self.level
         for y in range(0, len(lev)):
             for x in range(0, len(lev[y])):

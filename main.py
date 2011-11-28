@@ -4,7 +4,7 @@ import time
 import imagecontroller
 import soundcontroller
 import squishy
-import level
+import levelsurface
 import box
 import random
 
@@ -29,7 +29,8 @@ screen.blit(background, [0, 0])
 
 #init level
 level_num = 0
-level = level.Level(images, screen, background, lvls[level_num])
+old_level = lvls[level_num]
+level = levelsurface.LevelSurface(images, screen, background, lvls[level_num])
 level.build_level()
 screen.blit(level, [0, 0])
 
@@ -60,7 +61,12 @@ screen.blit(title, [0, 0])
 pygame.display.flip()
 sounds.play_music()
 
+dead = False
 press_space = False
+
+player.printme()
+print player
+
 while not press_space:
     event = pygame.event.poll()
     if (event.type == KEYUP and event.key == K_SPACE):
@@ -88,10 +94,14 @@ while True:
 
         elif event.type == RESTART:
             player.reset()
+            rendering.add(player)
             falling_box.empty()
             level_num += 1
             level.set_level(lvls[level_num])
+            level.clear_all_obstacles()
             level.build_level()
+            player.printme()
+            print player
             next = random.choice([CARD, WOOD, METAL, STONE])
             xpos = player.get_x()
             falling_box.add(box.Box(images.get_box(next), level, next, xpos))
@@ -118,4 +128,4 @@ while True:
     #check collision
     check = pygame.sprite.spritecollide(player, falling_box, False, pygame.sprite.collide_mask)
     if check:
-        player.check_killed(check[0].rect)
+        dead = player.check_killed(check[0].rect)
