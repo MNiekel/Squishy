@@ -28,10 +28,9 @@ title = images.get_title("Title")
 screen.blit(background, [0, 0])
 
 #init level
+level = levelsurface.LevelSurface(background)
 level_num = 0
-old_level = lvls[level_num]
-level = levelsurface.LevelSurface(images, screen, background, lvls[level_num])
-level.build_level("level00")
+level.initialize(images, level_num)
 screen.blit(level, [0, 0])
 
 #init squishy
@@ -64,9 +63,6 @@ sounds.play_music()
 dead = False
 press_space = False
 
-player.printme()
-print player
-
 while not press_space:
     event = pygame.event.poll()
     if (event.type == KEYUP and event.key == K_SPACE):
@@ -96,12 +92,10 @@ while True:
             player.reset()
             rendering.add(player)
             falling_box.empty()
-            level_num += 1
-            level.set_level(lvls[level_num])
             level.clear_all_obstacles()
-            level.build_level()
-            player.printme()
-            print player
+            if not dead:
+                level_num += 1
+            level.build_level(level_num)
             next = random.choice([CARD, WOOD, METAL, STONE])
             xpos = player.get_x()
             falling_box.add(box.Box(images.get_box(next), level, next, xpos))
@@ -113,7 +107,7 @@ while True:
             if event.key == K_ESCAPE:
                 sys.exit()
             if event.key in (K_LEFT, K_RIGHT):
-                player.move(event.key, level)
+                player.move(event.key)
 
     #call sprite updates
     rendering.update()

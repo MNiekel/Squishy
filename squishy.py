@@ -7,14 +7,14 @@ import sys
 from pygame.locals import *
 from globals import *
 
-STARTPOS = (400, 440)
+STARTPOS = (400, 400)
 ANIMATION_DELAY = 50
 
 class Squishy(mysprite.MySprite):
     def __init__(self, image, screen, level):
         mysprite.MySprite.__init__(self, image, screen)
 
-        self.rect.bottomleft = STARTPOS
+        self.rect.topleft = STARTPOS
         self.direction = LEFT
         self.level = level
         self.default = self.image #image of Squishy when he is standing still
@@ -41,7 +41,7 @@ class Squishy(mysprite.MySprite):
     def reset(self):
         self.image = self.default
         self.rect = self.image.get_rect()
-        self.rect.bottomleft = STARTPOS
+        self.rect.topleft = STARTPOS
         self.frame = 0
         self.moving = False
         self.falling = False
@@ -58,9 +58,11 @@ class Squishy(mysprite.MySprite):
         if self.dead:
             return True
         if self.in_animation:
+            oldpos = self.rect
             self.set_current_animation(SQUISHED)
+            self.rect = self.image.get_rect()
             self.rect.left = rect.left
-            self.rect.top = (rect.bottom / SIZE) * SIZE
+            self.rect.bottom = (oldpos.bottom / SIZE) * SIZE
         else:
             self.set_current_animation(SQUISHED)
         self.dead = True
@@ -92,24 +94,23 @@ class Squishy(mysprite.MySprite):
             self.rect = self.image.get_rect()
             self.rect.bottomleft = bottomleft
 
-    def move(self, key, lvl):
+    def move(self, key):
         if self.in_animation or self.falling or self.dead:
             return
-        x = self.rect.left / SIZE
-        y = (self.level.get_height() - self.rect.bottom) / SIZE
+        (x, y) = self.rect.center
         if key == K_LEFT:
-            if (self.level.check_obstacle(x - 1, y) == 0) or \
-                (self.level.check_obstacle(x - 1, y) == BUTTON):
+            if (self.level.check_obstacle(x - SIZE, y) == 0) or \
+                (self.level.check_obstacle(x - SIZE, y) == BUTTON):
                 self.set_current_animation(LEFT)
-            elif (self.level.check_obstacle(x - 1, y + 1) == 0) or \
-                (self.level.check_obstacle(x - 1, y + 1) == BUTTON):
+            elif (self.level.check_obstacle(x - SIZE, y - SIZE) == 0) or \
+                (self.level.check_obstacle(x - SIZE, y - SIZE) == BUTTON):
                 self.set_current_animation(JUMP_LEFT)
         if key == K_RIGHT:
-            if (self.level.check_obstacle(x + 1, y) == 0) or \
-                (self.level.check_obstacle(x + 1, y) == BUTTON):
+            if (self.level.check_obstacle(x + SIZE, y) == 0) or \
+                (self.level.check_obstacle(x + SIZE, y) == BUTTON):
                 self.set_current_animation(RIGHT)
-            elif (self.level.check_obstacle(x + 1, y + 1) == 0) or \
-                (self.level.check_obstacle(x + 1, y + 1) == BUTTON):
+            elif (self.level.check_obstacle(x + SIZE, y - SIZE) == 0) or \
+                (self.level.check_obstacle(x + SIZE, y - SIZE) == BUTTON):
                 self.set_current_animation(JUMP_RIGHT)
 
         if self.in_animation:
@@ -137,9 +138,9 @@ class Squishy(mysprite.MySprite):
             self.rect = self.image.get_rect()
             self.rect.topright = topright
 
-        x = self.rect.left / SIZE
-        y = (self.level.get_height() - self.rect.bottom) / SIZE
-        if self.level.check_obstacle(x, y - 1) == 0:
+        (x, y) = self.rect.center
+        if self.level.check_obstacle(x, y + SIZE) == 0\
+            or self.level.check_obstacle(x, y + SIZE) == BUTTON:
             self.falling = True
             self.set_current_animation(FALLING)
             self.last_update = pygame.time.get_ticks()
@@ -160,7 +161,7 @@ class Squishy(mysprite.MySprite):
                 self.kill()
                 event = pygame.event.Event(RESTART)
                 pygame.event.post(event)
-        if (self.falling and (time - self.last_update > self.delay)):
+        elif (self.falling and (time - self.last_update > self.delay)):
             topright = self.rect.topright
             self.rect = self.image.get_rect()
             self.rect.topright = topright
@@ -172,7 +173,7 @@ class Squishy(mysprite.MySprite):
             if self.frame == 0:
                 self.falling = False
                 self.reset_image(self.direction)
-        if (self.in_animation and (time - self.last_update > self.delay)):
+        elif (self.in_animation and (time - self.last_update > self.delay)):
             self.frame = (self.frame + 1) % len(self.current)
             self.image = self.current[self.frame]
             self.mask = pygame.mask.from_surface(self.image)

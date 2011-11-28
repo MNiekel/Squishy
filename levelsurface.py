@@ -1,4 +1,6 @@
 import pygame
+import os
+import sys
 
 from pygame.locals import *
 from globals import *
@@ -7,22 +9,22 @@ COLS = 20
 ROWS = 12
 
 class LevelSurface(pygame.Surface):
-    def __init__(self, img_control, screen, background, level):
-        pygame.Surface.__init__(self, screen.get_size())
+    def __init__(self, background):
+        pygame.Surface.__init__(self, background.get_size())
         self.convert()
         self.set_colorkey(TRANSPARENT)
         self.fill(TRANSPARENT)
 
+        self.background = background
+
         self.path = "levels/"
         self.images = {}
-        self.set_images(img_control)
-        self.image = pygame.Surface((SIZE, SIZE)).convert()
-        self.image.set_colorkey(TRANSPARENT)
-        self.image.fill(TRANSPARENT)
-        self.screen = screen
-        self.background = background
         self.matrix = [[' ' for i in range(COLS)] for j in range(ROWS)]
         self.oldmatrix = [[0 for i in range(COLS)] for j in range(ROWS)]
+
+    def initialize(self, img_control, level = 0):
+        self.set_images(img_control)
+        self.build_level(level)
 
     def set_images(self, img_control):
         self.images[BUTTON] = img_control.get_box(BUTTON)
@@ -32,10 +34,11 @@ class LevelSurface(pygame.Surface):
         self.images[WOOD] = img_control.get_box(WOOD)
         self.images[METAL] = img_control.get_box(METAL)
 
-    def set_level(self, matrix):
-        self.matrix = matrix
-
     def read_level(self, filename):
+        full = self.path + filename
+        if not os.path.isfile(full):
+            print "File does not exist: ", full
+            sys.exit()
         file = open(self.path + filename, 'r')
         rows = []
         for line in file:
@@ -52,45 +55,45 @@ class LevelSurface(pygame.Surface):
                 if not type == 0:
                     self.blit(self.images[type], [SIZE*x, SIZE*y])
 
-    def build_level(self, filename):
-        lvl = self.read_level(filename)
-        for y in range(0, len(lvl)):
-            row = lvl[y]
+    def build_level(self, level = 0):
+        matrix = self.read_level("level" + str(level))
+        for y in range(0, len(matrix)):
+            row = matrix[y]
             for x in range(0, len(row)-1): #skip EOL
                 self.matrix[y][x] = row[x]
                 if row[x] == 'W':
                     self.oldmatrix[y][x] = WALL
                 elif row[x] == 'O':
                     self.oldmatrix[y][x] = BUTTON
+                elif row[x] == ' ':
+                    self.oldmatrix[y][x] = 0
         self.draw_level()
-        return
-        if not type == 0:
-            ypos = self.get_height() - SIZE
-            self.blit(self.images[type], [SIZE*x, ypos - SIZE*y])
 
-    def check_obstacle(self, x, y):
-        return self.oldmatrix[y][x]
+    def check_obstacle(self, x, y): #x, y in screen coordinates
+        return self.oldmatrix[y/SIZE][x/SIZE]
 
-    def get_type(self, x, y):
-        return self.oldmatrix[y][x]
+    def get_type(self, x, y): #x, y in screen coordinates
+        return self.oldmatrix[y/SIZE][x/SIZE]
 
     def show_next_box(self, type):
         self.oldmatrix[0][0] = type
         rect = Rect(0, self.get_height() - SIZE, SIZE, SIZE)
         self.blit(self.images[type], rect)
 
-    def set_obstacle(self, x, y, type):
+    def set_obstacle(self, x, y, type): #x, y in screen coordinates
+        x = x / SIZE
+        y = y / SIZE
         self.oldmatrix[y][x] = type
-        rect = Rect(SIZE*x, self.get_height() - SIZE*(y+1), SIZE, SIZE)
+        rect = Rect(SIZE*x, SIZE*y, SIZE, SIZE)
         self.blit(self.images[type], rect)
 
-    def remove_obstacle(self, x, y):
-        print "removing obstacle"
+    def remove_obstacle(self, x, y): #x, y in screen coordinates
+        x = x / SIZE
+        y = y / SIZE
         self.oldmatrix[y][x] = 0
-        rect = Rect(SIZE*x, self.get_height() - SIZE*(y+1), SIZE, SIZE)
+        rect = Rect(SIZE*x, SIZE*y, SIZE, SIZE)
         surf = self.background.subsurface(rect)
         self.blit(surf, rect)
 
     def clear_all_obstacles(self):
-        print "clearing level"
         self.blit(self.background, [0, 0])

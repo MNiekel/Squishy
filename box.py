@@ -13,13 +13,14 @@ class Box(mysprite.MySprite):
         self.rect.bottomleft = (xpos, 0)
 
     def update(self):
+        old_y = self.rect.bottom
         self.rect.bottom += 2
-        x = self.rect.left / SIZE
-        y = (self.screen.get_height() - self.rect.bottom) / SIZE
+        x = self.rect.left
+        y = self.rect.bottom
         if not (self.screen.check_obstacle(x, y) == 0):
             type = self.screen.get_type(x, y)
             if (type >= self.type or type < 0):
-                self.screen.set_obstacle(x, y+1, self.type)
+                self.screen.set_obstacle(x, old_y, self.type)
                 self.kill()
                 event = pygame.event.Event(NEW_BOX)
                 pygame.event.post(event)
