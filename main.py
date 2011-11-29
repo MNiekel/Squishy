@@ -44,7 +44,7 @@ screen.blit(background, [0, 0])
 
 #init level
 level = levelsurface.LevelSurface(background)
-level_num = 0
+level_num = 8
 pos = level.initialize(images, level_num)
 screen.blit(level, [0, 0])
 
