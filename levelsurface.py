@@ -24,7 +24,7 @@ class LevelSurface(pygame.Surface):
 
     def initialize(self, img_control, level = 0):
         self.set_images(img_control)
-        self.build_level(level)
+        return self.build_level(level)
 
     def set_images(self, img_control):
         self.images[BUTTON] = img_control.get_box(BUTTON)
@@ -56,6 +56,7 @@ class LevelSurface(pygame.Surface):
                     self.blit(self.images[type], [SIZE*x, SIZE*y])
 
     def build_level(self, level = 0):
+        pos = None
         matrix = self.read_level("level" + str(level))
         for y in range(0, len(matrix)):
             row = matrix[y]
@@ -67,7 +68,11 @@ class LevelSurface(pygame.Surface):
                     self.oldmatrix[y][x] = BUTTON
                 elif row[x] == ' ':
                     self.oldmatrix[y][x] = 0
+                elif row[x] == 'S':
+                    self.oldmatrix[y][x] = 0
+                    pos = (SIZE * x, SIZE * y)
         self.draw_level()
+        return pos
 
     def check_obstacle(self, x, y): #x, y in screen coordinates
         return self.oldmatrix[y/SIZE][x/SIZE]
@@ -83,9 +88,12 @@ class LevelSurface(pygame.Surface):
     def set_obstacle(self, x, y, type): #x, y in screen coordinates
         x = x / SIZE
         y = y / SIZE
+        if y < 0:
+            return False
         self.oldmatrix[y][x] = type
         rect = Rect(SIZE*x, SIZE*y, SIZE, SIZE)
         self.blit(self.images[type], rect)
+        return True
 
     def remove_obstacle(self, x, y): #x, y in screen coordinates
         x = x / SIZE

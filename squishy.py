@@ -11,10 +11,10 @@ STARTPOS = (400, 400)
 ANIMATION_DELAY = 50
 
 class Squishy(mysprite.MySprite):
-    def __init__(self, image, screen, level):
+    def __init__(self, image, screen, level, pos = STARTPOS):
         mysprite.MySprite.__init__(self, image, screen)
 
-        self.rect.topleft = STARTPOS
+        self.rect.topleft = pos
         self.direction = LEFT
         self.level = level
         self.default = self.image #image of Squishy when he is standing still
@@ -38,10 +38,10 @@ class Squishy(mysprite.MySprite):
     def set_sounds(self, sound, label):
         self.sounds[label] = sound
 
-    def reset(self):
+    def reset(self, pos = STARTPOS):
         self.image = self.default
         self.rect = self.image.get_rect()
-        self.rect.topleft = STARTPOS
+        self.rect.topleft = pos
         self.frame = 0
         self.moving = False
         self.falling = False
@@ -99,6 +99,8 @@ class Squishy(mysprite.MySprite):
             return
         (x, y) = self.rect.center
         if key == K_LEFT:
+            if (x < SIZE):
+                return
             if (self.level.check_obstacle(x - SIZE, y) == 0) or \
                 (self.level.check_obstacle(x - SIZE, y) == BUTTON):
                 self.set_current_animation(LEFT)
@@ -106,6 +108,8 @@ class Squishy(mysprite.MySprite):
                 (self.level.check_obstacle(x - SIZE, y - SIZE) == BUTTON):
                 self.set_current_animation(JUMP_LEFT)
         if key == K_RIGHT:
+            if (x > (self.screen.get_width() - SIZE)):
+                return
             if (self.level.check_obstacle(x + SIZE, y) == 0) or \
                 (self.level.check_obstacle(x + SIZE, y) == BUTTON):
                 self.set_current_animation(RIGHT)

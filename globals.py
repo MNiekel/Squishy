@@ -3,6 +3,7 @@ from pygame.locals import *
 
 NEW_BOX = USEREVENT + 1
 RESTART = USEREVENT + 2
+BOX_OUT_OF_SCREEN = USEREVENT + 3
 
 PANDORA = 800, 480
 SIZE = 40 #width and height of level raster and boxes
@@ -19,12 +20,12 @@ FALLING = 4
 SQUISHED = 5
 
 #types of blocks\level images
-BUTTON = -2
-WALL = -1
+BUTTON = -1
 CARD = 1
 WOOD = 2
 METAL = 3
 STONE = 4
+WALL = 5
 
 #sound IDs
 BUTTON_SND = 0

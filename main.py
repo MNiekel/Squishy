@@ -17,24 +17,42 @@ pygame.init()
 pygame.mixer.init()
 clock = pygame.time.Clock()
 
+def wait_for_space():
+    press_space = False
+
+    while not press_space:
+        event = pygame.event.poll()
+        if (event.type == KEYUP and event.key == K_SPACE):
+            press_space = True
+            pygame.event.clear()
+        if (event.type == KEYDOWN and event.key == K_ESCAPE):
+            sys.exit()
+        if (event.type == pygame.QUIT):
+            sys.exit()
+
 images = imagecontroller.ImageController()
 sounds = soundcontroller.SoundController()
-box_hit_bottom_snd = sounds.load_sound("Wall")
 
 #init screen
 screen = pygame.display.set_mode(PANDORA)
 background = images.get_bg("Background")
+title = images.get_title("Title")
+title_won = images.get_title("Won")
+title_lost = images.get_title("Lost")
 title = images.get_title("Title")
 screen.blit(background, [0, 0])
 
 #init level
 level = levelsurface.LevelSurface(background)
 level_num = 0
-level.initialize(images, level_num)
+pos = level.initialize(images, level_num)
 screen.blit(level, [0, 0])
 
 #init squishy
-player = squishy.Squishy(images.get("Lazarus_stand"), screen, level)
+if pos:
+    player = squishy.Squishy(images.get("Stand"), screen, level, pos)
+else:
+    player = squishy.Squishy(images.get("Stand"), screen, level)
 player.set_animations(images.get_animation("Left"), LEFT)
 player.set_animations(images.get_animation("Right"), RIGHT)
 player.set_animations(images.get_animation("Jump_Left"), JUMP_LEFT)
@@ -49,8 +67,9 @@ player.set_sounds(sounds.load_sound("Squished"), SQUISHED_SND)
 
 #init spritelist
 rendering = pygame.sprite.RenderUpdates()
-falling_box = pygame.sprite.RenderUpdates()
 rendering.add(player)
+falling_box = pygame.sprite.RenderUpdates()
+box_hit_bottom_snd = sounds.load_sound("Wall")
 next = random.choice([CARD, WOOD, METAL, STONE])
 falling_box.add(box.Box(images.get_box(next), level, next, player.get_x()))
 next = random.choice([CARD, WOOD, METAL, STONE])
@@ -60,18 +79,9 @@ screen.blit(title, [0, 0])
 pygame.display.flip()
 sounds.play_music()
 
-dead = False
-press_space = False
+wait_for_space()
 
-while not press_space:
-    event = pygame.event.poll()
-    if (event.type == KEYUP and event.key == K_SPACE):
-        press_space = True
-        pygame.event.clear()
-    if (event.type == KEYDOWN and event.key == K_ESCAPE):
-        sys.exit()
-    if (event.type == pygame.QUIT):
-        sys.exit()
+dead = False
 
 while True:
     clock.tick(100)
@@ -81,6 +91,11 @@ while True:
         if event.type == pygame.QUIT:
             sys.exit()
 
+        elif event.type == BOX_OUT_OF_SCREEN:
+            dead = True
+            event = pygame.event.Event(RESTART)
+            pygame.event.post(event)
+
         elif event.type == NEW_BOX:
             box_hit_bottom_snd.play()
             xpos = player.get_x()
@@ -89,24 +104,35 @@ while True:
             level.show_next_box(next)
 
         elif event.type == RESTART:
-            player.reset()
+            if not dead:
+                level_num += 1
+                screen.blit(title_won, [0, 0])
+            else:
+                screen.blit(title_lost, [0, 0])
+            pygame.display.flip()
+            wait_for_space()
+            dead = False
             rendering.add(player)
             falling_box.empty()
             level.clear_all_obstacles()
-            if not dead:
-                level_num += 1
-            level.build_level(level_num)
+            pos = level.build_level(level_num)
+            if pos:
+                player.reset(pos)
+            else:
+                player.reset()
             next = random.choice([CARD, WOOD, METAL, STONE])
             xpos = player.get_x()
             falling_box.add(box.Box(images.get_box(next), level, next, xpos))
             next = random.choice([CARD, WOOD, METAL, STONE])
             level.show_next_box(next)
-            pygame.time.wait(2000)
 
         elif event.type == KEYDOWN:
-            if event.key == K_ESCAPE:
+            if event.key == K_n:
+                event = pygame.event.Event(RESTART)
+                pygame.event.post(event)
+            elif event.key == K_ESCAPE:
                 sys.exit()
-            if event.key in (K_LEFT, K_RIGHT):
+            elif event.key in (K_LEFT, K_RIGHT):
                 player.move(event.key)
 
     #call sprite updates
