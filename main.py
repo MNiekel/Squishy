@@ -44,7 +44,7 @@ screen.blit(background, [0, 0])
 
 #init level
 level = levelsurface.LevelSurface(background)
-level_num = 8
+level_num = 0
 pos = level.initialize(images, level_num)
 screen.blit(level, [0, 0])
 
@@ -92,6 +92,7 @@ while True:
             sys.exit()
 
         elif event.type == BOX_OUT_OF_SCREEN:
+            print "BOX out of screen"
             dead = True
             event = pygame.event.Event(RESTART)
             pygame.event.post(event)

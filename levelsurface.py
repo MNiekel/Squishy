@@ -40,11 +40,7 @@ class LevelSurface(pygame.Surface):
             print "File does not exist: ", full
             sys.exit()
         file = open(self.path + filename, 'r')
-        rows = []
-        for line in file:
-            rows.append(line)
-        file.close()
-        return rows
+        return file.readlines()
 
     def draw_level(self):
         rows = len(self.oldmatrix)
@@ -58,9 +54,10 @@ class LevelSurface(pygame.Surface):
     def build_level(self, level = 0):
         pos = None
         matrix = self.read_level("level" + str(level))
+        self.oldmatrix = [[0 for i in range(COLS)] for j in range(ROWS)]
         for y in range(0, len(matrix)):
-            row = matrix[y]
-            for x in range(0, len(row)-1): #skip EOL
+            row = matrix[y].rstrip() #haal spaties rechts en eol weg
+            for x in range(0, len(row)):
                 self.matrix[y][x] = row[x]
                 if row[x] == 'W':
                     self.oldmatrix[y][x] = WALL
@@ -81,7 +78,7 @@ class LevelSurface(pygame.Surface):
         return self.oldmatrix[y/SIZE][x/SIZE]
 
     def show_next_box(self, type):
-        self.oldmatrix[0][0] = type
+        self.oldmatrix[ROWS-1][0] = type
         rect = Rect(0, self.get_height() - SIZE, SIZE, SIZE)
         self.blit(self.images[type], rect)
 
