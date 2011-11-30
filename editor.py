@@ -11,15 +11,20 @@ from globals import *
 _BUTTON = 'O'
 _WALL = 'W'
 _SQUISHY = 'S'
+PATH = 'levels/'
 
 COLS = 20
 ROWS = 12
 
-def tostring():
-    file = open("levels/level8", 'w')
+def tostring(num):
+    file = open(PATH + 'level' + str(num), 'w')
     file.write('\n'.join([''.join(row) for row in matrix]))
     file.write('\n')
     file.close()
+
+num = int(raw_input('Please enter level number (0-1000): '))
+while (num < 0 or num > 1000):
+    num = int(raw_input('Incorrect number, please try again: '))
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -51,7 +56,7 @@ while True:
 
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
-                tostring()
+                tostring(num)
                 sys.exit()
 
         elif event.type == MOUSEBUTTONDOWN:
