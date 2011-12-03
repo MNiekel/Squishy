@@ -87,7 +87,6 @@ while True:
     clock.tick(100)
 
     for event in pygame.event.get():
-        #game.evaluate_event(event)
         if event.type == pygame.QUIT:
             sys.exit()
 
